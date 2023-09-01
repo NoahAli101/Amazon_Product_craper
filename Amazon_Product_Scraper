@@ -1,0 +1,50 @@
+#Install Required Libraries
+pip install requests beautifulsoup4
+
+
+#basic example of a web scraper that extracts product information (title, price, and URL) from an Amazon search page
+import requests
+from bs4 import BeautifulSoup
+
+def scrape_amazon(search_query, num_results=5):
+    base_url = 'https://www.amazon.com'
+    url = f'{base_url}/s?k={search_query.replace(" ", "+")}'
+
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    results = []
+    for item in soup.select('.s-result-item'):
+        title = item.select_one('.s-title-instructions h2')
+        price = item.select_one('.a-offscreen')
+        product_url = item.select_one('a.s-no-outline')
+
+        if title and price and product_url:
+            results.append({
+                'title': title.text.strip(),
+                'price': price.text.strip(),
+                'product_url': base_url + product_url['href']
+            })
+
+        if len(results) >= num_results:
+            break
+
+    return results
+
+def main():
+    search_query = input("Enter a product to search on Amazon: ")
+    num_results = int(input("Enter the number of results to retrieve: "))
+
+    results = scrape_amazon(search_query, num_results)
+    for idx, result in enumerate(results, start=1):
+        print(f"Result {idx}:")
+        print(f"Title: {result['title']}")
+        print(f"Price: {result['price']}")
+        print(f"Product URL: {result['product_url']}\n")
+
+if __name__ == "__main__":
+    main()
+
+
+
+
